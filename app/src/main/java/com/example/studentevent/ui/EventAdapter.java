@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.studentevent.data.DatabaseHelper;
+import com.example.studentevent.data.MyEventsSync;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
 
@@ -65,6 +66,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         holder.btnRegister.setOnClickListener(v -> {
             DatabaseHelper db = new DatabaseHelper(context);
             if (db.addToMyEvents(event.getId())) {
+                MyEventsSync.saveToFirestore(event, "");
                 Toast.makeText(context, R.string.success_added_to_my, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(context, R.string.error_already_in_my, Toast.LENGTH_SHORT).show();

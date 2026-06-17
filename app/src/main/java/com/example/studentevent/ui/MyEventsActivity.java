@@ -11,27 +11,26 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.studentevent.data.DatabaseHelper;
+import com.example.studentevent.data.MyEventsSync;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
+/**
+ * Purpose: Shows the logged-in user's personal event list.
+ * Input: User session and synced data from SQLite/Firestore.
+ * Output: Personal events with reminders and actions.
+ */
 public class MyEventsActivity extends AppCompatActivity {
 
     private RecyclerView recyclerMyEvents;
     private ArrayList<Event> myEventsList;
     private MyEventsAdapter myEventsAdapter;
-
     private Button btnBack;
-
     private DatabaseHelper databaseHelper;
 
-    /**
-     * Purpose: Starts the user's events screen.
-     * Input: savedInstanceState contains previous activity state if it exists.
-     * Output: Displays user's registered events.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,9 +45,7 @@ public class MyEventsActivity extends AppCompatActivity {
         databaseHelper = new DatabaseHelper(this);
 
         connectViews();
-        createMyEventsList();
-        setupRecyclerView();
-        checkExpiredReminders();
+        MyEventsSync.syncFromFirestore(this, this::loadMyEvents);
         setButtonListeners();
     }
 
@@ -57,50 +54,30 @@ public class MyEventsActivity extends AppCompatActivity {
         return prefs.contains("user_email") && FirebaseAuth.getInstance().getCurrentUser() != null;
     }
 
-    /**
-     * Purpose: Connects XML components to Java variables.
-     * Input: None.
-     * Output: RecyclerView is ready to use.
-     */
     private void connectViews() {
         recyclerMyEvents = findViewById(R.id.recyclerMyEvents);
         btnBack = findViewById(R.id.btnBack);
     }
 
-    /**
-     * Purpose: Creates temporary registered events until SQLite is connected.
-     * Input: None.
-     * Output: ArrayList with user's events.
-     */
-    private void createMyEventsList() {
+    private void loadMyEvents() {
         myEventsList = databaseHelper.getMyEvents();
+        setupRecyclerView();
+        checkExpiredReminders();
     }
 
-    /**
-     * Purpose: Sets RecyclerView layout and adapter.
-     * Input: None.
-     * Output: User's events are displayed as CardViews.
-     */
     private void setupRecyclerView() {
         myEventsAdapter = new MyEventsAdapter(this, myEventsList);
         recyclerMyEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerMyEvents.setAdapter(myEventsAdapter);
     }
 
-    /**
-     * Purpose: Adds click action to back button.
-     * Input: None.
-     * Output: Closes MyEventsActivity and returns to previous screen.
-     */
     private void setButtonListeners() {
         btnBack.setOnClickListener(v -> finish());
     }
 
     private void checkExpiredReminders() {
-        Toast.makeText(
-                this,
-                "יש תזכורות שעברו. בדוק את האירועים שלך.",
-                Toast.LENGTH_LONG
-        ).show();
+        if (databaseHelper.hasExpiredReminders()) {
+            Toast.makeText(this, R.string.warning_expired_reminders, Toast.LENGTH_LONG).show();
+        }
     }
 }

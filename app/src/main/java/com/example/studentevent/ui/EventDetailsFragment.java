@@ -16,6 +16,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.studentevent.R;
 import com.example.studentevent.data.DatabaseHelper;
+import com.example.studentevent.data.MyEventsSync;
 import com.example.studentevent.model.Event;
 import com.example.studentevent.model.Review;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,7 +33,7 @@ import java.util.Map;
  * Input: SQLite event id.
  * Output: Event details dialog with register, add to my events, and share actions.
  */
-public class EventDetailsFragment extends DialogFragment {
+public class EventDetailsFragment extends DialogFragment implements WriteReviewFragment.ReviewSavedListener {
 
     private Event event;
     private DatabaseHelper dbHelper;
@@ -42,7 +43,7 @@ public class EventDetailsFragment extends DialogFragment {
     private TextView txtDetailsName, txtDetailsOrganizer, txtDetailsCategory, txtDetailsDate;
     private TextView txtDetailsDescription, txtDetailsRegisteredCount, txtDetailsAverageRating;
     private TextView txtDetailsReviewsLabel, txtDetailsReviews, txtDetailsStatus;
-    private Button btnDetailsRegister, btnDetailsAddToMy, btnDetailsShare;
+    private Button btnDetailsRegister, btnDetailsAddToMy, btnDetailsWriteReview, btnDetailsShare;
 
     public static EventDetailsFragment newInstance(int eventId) {
         EventDetailsFragment fragment = new EventDetailsFragment();
@@ -94,6 +95,7 @@ public class EventDetailsFragment extends DialogFragment {
         txtDetailsStatus = view.findViewById(R.id.txtDetailsStatus);
         btnDetailsRegister = view.findViewById(R.id.btnDetailsRegister);
         btnDetailsAddToMy = view.findViewById(R.id.btnDetailsAddToMy);
+        btnDetailsWriteReview = view.findViewById(R.id.btnDetailsWriteReview);
         btnDetailsShare = view.findViewById(R.id.btnDetailsShare);
     }
 
@@ -120,11 +122,18 @@ public class EventDetailsFragment extends DialogFragment {
             txtDetailsStatus.setText(R.string.status_registered);
             btnDetailsRegister.setEnabled(false);
             btnDetailsRegister.setText(R.string.btn_registered);
+            btnDetailsWriteReview.setVisibility(View.VISIBLE);
         } else {
             txtDetailsStatus.setText(R.string.status_not_registered);
             btnDetailsRegister.setEnabled(true);
             btnDetailsRegister.setText(R.string.btn_register_for_event);
+            btnDetailsWriteReview.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void onReviewSaved() {
+        loadReviews();
     }
 
     private void checkRegistrationFromFirestore() {
@@ -198,6 +207,7 @@ public class EventDetailsFragment extends DialogFragment {
 
         btnDetailsAddToMy.setOnClickListener(v -> {
             if (dbHelper.addToMyEvents(event.getId())) {
+                MyEventsSync.saveToFirestore(event, "");
                 Toast.makeText(getContext(), R.string.success_added_to_my, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), R.string.error_already_in_my, Toast.LENGTH_SHORT).show();
@@ -205,6 +215,17 @@ public class EventDetailsFragment extends DialogFragment {
         });
 
         btnDetailsShare.setOnClickListener(v -> shareEvent());
+
+        btnDetailsWriteReview.setOnClickListener(v -> {
+            if (event.getFirestoreId() == null || !event.isUserRegistered()) {
+                Toast.makeText(getContext(), R.string.error_review_not_registered, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            WriteReviewFragment fragment = WriteReviewFragment.newInstance(
+                    event.getFirestoreId(), event.getName(), true);
+            fragment.setTargetFragment(this, 0);
+            fragment.show(getParentFragmentManager(), "WriteReviewFragment");
+        });
     }
 
     private void registerForEvent() {

@@ -220,7 +220,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.delete(TABLE_EVENTS, COL_ID + "=?", new String[]{String.valueOf(id)}) > 0;
     }
 
+    public boolean isInMyEvents(int eventId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_MY_EVENTS, new String[]{COL_MY_ID}, COL_MY_EVENT_ID + "=?",
+                new String[]{String.valueOf(eventId)}, null, null, null);
+        boolean exists = cursor.moveToFirst();
+        cursor.close();
+        return exists;
+    }
+
     public boolean addToMyEvents(int eventId) {
+        if (isInMyEvents(eventId)) {
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_MY_EVENT_ID, eventId);
@@ -230,15 +242,75 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public ArrayList<Event> getMyEvents() {
         ArrayList<Event> myEvents = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT e.* FROM " + TABLE_EVENTS + " e INNER JOIN " + TABLE_MY_EVENTS + " m ON e." + COL_ID + " = m." + COL_MY_EVENT_ID;
+        String query = "SELECT e.*, m." + COL_REMINDER_DATE + " FROM " + TABLE_EVENTS + " e INNER JOIN "
+                + TABLE_MY_EVENTS + " m ON e." + COL_ID + " = m." + COL_MY_EVENT_ID;
         Cursor cursor = db.rawQuery(query, null);
         if (cursor.moveToFirst()) {
             do {
-                myEvents.add(cursorToEvent(cursor));
+                Event event = cursorToEvent(cursor);
+                int reminderIndex = cursor.getColumnIndex(COL_REMINDER_DATE);
+                if (reminderIndex >= 0) {
+                    event.setReminderDate(cursor.getString(reminderIndex));
+                }
+                myEvents.add(event);
             } while (cursor.moveToNext());
         }
         cursor.close();
         return myEvents;
+    }
+
+    public boolean updateReminderDate(int eventId, String reminderDate) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_REMINDER_DATE, reminderDate);
+        return db.update(TABLE_MY_EVENTS, values, COL_MY_EVENT_ID + "=?", new String[]{String.valueOf(eventId)}) > 0;
+    }
+
+    public boolean hasExpiredReminders() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_MY_EVENTS, new String[]{COL_REMINDER_DATE},
+                COL_REMINDER_DATE + " IS NOT NULL AND " + COL_REMINDER_DATE + " != ''",
+                null, null, null, null);
+        boolean hasExpired = false;
+        if (cursor.moveToFirst()) {
+            do {
+                if (isDateBeforeToday(cursor.getString(0))) {
+                    hasExpired = true;
+                    break;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return hasExpired;
+    }
+
+    private boolean isDateBeforeToday(String dateText) {
+        if (dateText == null || dateText.isEmpty()) {
+            return false;
+        }
+        String[] parts = dateText.split("\\.");
+        if (parts.length != 3) {
+            return false;
+        }
+        try {
+            int day = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int year = Integer.parseInt(parts[2]);
+
+            java.util.Calendar reminder = java.util.Calendar.getInstance();
+            reminder.set(year, month - 1, day, 0, 0, 0);
+            reminder.set(java.util.Calendar.MILLISECOND, 0);
+
+            java.util.Calendar today = java.util.Calendar.getInstance();
+            today.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            today.set(java.util.Calendar.MINUTE, 0);
+            today.set(java.util.Calendar.SECOND, 0);
+            today.set(java.util.Calendar.MILLISECOND, 0);
+
+            return reminder.before(today);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     public boolean removeFromMyEvents(int eventId) {
