@@ -1,0 +1,356 @@
+# Mandatory sections (work in order)
+
+RULES:
+# General Requirements
+
+**Important:** Failure to fulfill one or more of the requirements will result in a deduction of points!
+
+All requirements from the previous assignment must be preserved.
+
+Additionally, in this assignment you must:
+
+* Use **SharedPreferences** to store the logged-in user's details.
+* Perform full synchronization between **SQLite** and **Firestore**.
+* Use **RecyclerView** to display lists.
+* Use **CardView** to display items inside a **RecyclerView**.
+* Use a **DialogFragment** for event filtering.
+* Use **Fragments** where appropriate.
+* Use **AlertDialog** to confirm deletion and update actions.
+* Use **Toast** or **Snackbar** to display notifications to the user.
+* Use **strings.xml** for all strings in the application.
+* Maintain separation between the UI code and the application's business logic.
+* Write clean, organized code divided into functions with meaningful variable names.
+* Document every function briefly: explain what it does, what input it receives, and what it returns.
+
+
+sections:
+
+### Requirements:
+
+## 1. LoginActivity – Login and Registration Screen (New)
+
+The application will open with the login screen.
+
+In this screen, the user can:
+
+* Register as a new user using a full name, email, and password.
+* Log in as an existing user using an email and password.
+* Move to the main screen after successful login.
+
+You must use **Firebase Authentication** for the registration and login process.
+
+After a successful registration, the user’s details must be stored in **Firebase Firestore**.
+
+The user’s details should also be saved using **SharedPreferences**, so that the user remains logged in even after closing and reopening the application.
+
+A user who is not logged in cannot access the internal screens of the application.
+
+
+
+
+## 2. MainActivity (Home Screen)
+
+After a successful login, the user will move to **MainActivity** (new).
+
+The main layout should remain as a **ConstraintLayout**.
+
+The home screen will include:
+
+* The application's logo using an **ImageView**.
+* A button: **"View Events"**.
+* A button: **"My Events"**.
+* A button: **"Manage Events"** — visible only to users with the **Manager** role (new).
+* A button: **"Logout"** (new).
+
+When pressing **"Logout"**, the application should perform a **Sign Out** from **Firebase Authentication** and delete the logged-in user’s details from **SharedPreferences**. After that, the user should be returned to the login screen (new).
+
+Clicking each button should navigate the user to the appropriate screen using an **Intent**.
+
+
+
+## 3. User Types and Permissions (New)
+
+The application will have two types of users:
+
+* **Student** – a regular user.
+* **Admin** – a manager.
+
+### A regular user can:
+
+* View events.
+* Add events to their personal list.
+* Set reminders.
+* Register for an event.
+* Write an opinion/review about an event they participated in.
+* Share an event or an event summary.
+
+### An Admin can perform all actions available to a regular user, and additionally:
+
+* Add new events.
+* Edit existing events.
+* Delete events.
+* Manage users.
+
+The **"Manage Events"** button should be displayed only for an Admin. The application must check the user's role in the code and not rely only on hiding the button.
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+## 4. BrowseEventsActivity (Events Browsing Screen)
+
+Continue using the **BrowseEventsActivity** screen from the previous assignment. This screen will display all existing events in the application.
+
+In this assignment, the events will be stored in both **Firebase Firestore** and **SQLite** (new).
+
+When opening the screen, the events should be displayed from **SQLite** after synchronizing the database with **Firestore** (new).
+
+Use a **RecyclerView**, where each event will be displayed inside a **CardView**.
+
+For each event, display:
+
+* Event name.
+* Lecturer / organizer name.
+* Category, for example: workshop, lecture, performance, conference, learning session.
+* Event date.
+* A local image from the **drawable** directory.
+* A button: **"Add to My Events"**.
+* An **ImageButton** for sharing the event with others.
+* The number of users who registered for the event (new).
+
+At the top of the screen, add:
+
+* A **"Filter Events"** button that opens the **FilterEventsFragment**.
+* A **"Reset Filter"** button that restores the full list of events from **SQLite**.
+
+**Note:** Do not use **Firebase Storage** for images. The images should be stored only in the **drawable** directory (new).
+
+
+
+## 5. FilterEventsFragment (Event Filtering)
+
+Continue using the **FilterEventsFragment** from the previous assignment.
+
+Create a **DialogFragment** named **FilterEventsFragment**.
+
+The fragment will include:
+
+* A **Spinner** for selecting an event category.
+* A **Spinner** for selecting the minimum number of participants registered for the event (new).
+  The categories should be defined in the **strings.xml** file.
+* A **"Apply Filter"** button.
+* A **"Cancel"** button.
+
+For the minimum number of participants, the available options are:
+
+* All
+* At least 5 participants
+* At least 10 participants
+* At least 20 participants
+
+When the user clicks **"Apply Filter"**, the **BrowseEventsActivity** should be updated to display only the events that belong to the selected category and have at least the selected number of participants (new). The filtering should be performed using an **SQLite query** (new), not by filtering the list in Java.
+
+For example, if the user selects the category **"Workshop"** and **"At least 10 participants"**, only workshop events with **10 or more registered participants** should be displayed.
+
+When the user clicks **"Cancel"**, the **DialogFragment** should close without changing the displayed results.
+
+
+
+## 6. EventDetailsFragment (Event Details) (New)
+
+Add a new **Fragment** called **EventDetailsFragment**.
+
+When the user clicks on an event from **BrowseEventsActivity**, a screen displaying full details about the event should appear.
+
+The fragment will display:
+
+* Event name.
+* Lecturer / organizer name.
+* Category.
+* Event date.
+* Short description of the event.
+* A local image from the **drawable** directory.
+* Number of users who registered for the event.
+* Users’ opinions/reviews.
+* The participation status of the logged-in user.
+
+If the user is registered for the event, display a suitable text such as:
+**"You are registered for this event."**
+
+If the user is not registered for the event, display:
+**"You have not registered for this event yet."**
+
+The fragment will contain the following buttons:
+
+* **"Add to My Events"**
+* **"Register for the Event"**
+* **"Share Event"**
+
+The **Share Event** button should use an **implicit Intent**.
+
+When the user clicks **"Register for the Event"**, the registration status of the logged-in user must be updated in both **Firestore** and **SQLite** (new).
+
+Additionally, the number of registered users must be updated in **Firestore** (new).
+
+The system must ensure that a user cannot register more than once for the same event (new).
+
+After a successful registration, display a suitable message using a **Toast** or **Snackbar**.
+
+
+
+## 7. MyEventsActivity (My Events)
+
+Continue using the **MyEventsActivity** screen from the previous assignment. This screen will display only the events that the logged-in user added to their personal list (new).
+
+Each user’s personal events will be stored in both **Firestore** and **SQLite** (new).
+
+For each event in the personal list, display:
+
+* Event name.
+* Lecturer / organizer name.
+* Category.
+* Event date.
+* A **DatePicker** for selecting a personal reminder date.
+* A **"Set Reminder"** button.
+* A **"Remove from My List"** button.
+* A **"Write Review"** button — only if the user has registered for the event (new).
+* A **"View Summary"** button that opens the **EventSummaryFragment**.
+
+When clicking **"Set Reminder"**, the reminder date must be saved in both **SQLite** and **Firestore** (new).
+
+After a successful operation, display an appropriate **Toast** or **Snackbar** message. If the reminder date has already passed, display a suitable warning when the user returns to the **"My Events"** screen.
+
+
+
+## 8. EventSummaryFragment (Event Summary)
+
+Continue using the **EventSummaryFragment** from the previous assignment.
+
+The fragment will display:
+
+* Event name.
+* Lecturer / organizer name.
+* Category.
+* Event date.
+* The selected reminder date.
+* A **"Share Event Summary"** button.
+* The user’s participation status (new).
+
+Sharing should be performed using an **implicit Intent**.
+
+
+
+## 9. Writing Reviews and Rating an Event (New)
+
+A user who has registered for an event can write a review about the event.
+
+The review will include:
+
+* A rating from 1 to 5.
+* Free text for the review.
+
+A **Spinner** can be used for selecting the rating.
+
+The review must be saved in **Firebase Firestore**.
+
+In **EventDetailsFragment**, display the reviews written about the event. In addition, display the event’s average rating.
+
+A user who has not registered for the event cannot write a review.
+
+
+
+## 10. ManageEventsActivity (Event Management Screen)
+
+Continue using the **ManageEventsActivity** screen from the previous assignment.
+
+This screen will be available **only for users with the Admin role** (new).
+
+In this screen, the Admin can:
+
+* View all events (including displaying the number of users registered for each event).
+* Add a new event.
+* Edit an existing event.
+* Delete an existing event.
+
+Every action of adding, editing, or deleting an event must update both **Firebase Firestore** and **SQLite** (new).
+
+When adding a new event, the following information must be provided:
+
+* Event name.
+* Lecturer / organizer name.
+* Category.
+* Event date.
+* Short description.
+* A local image from the **drawable** directory, or a fixed image based on the category.
+
+For **editing and deleting** operations, an **AlertDialog** must be displayed to ask for confirmation from the user before performing the action (new).
+
+For example:
+**"Are you sure you want to delete this event?"**
+
+After a successful operation, display an appropriate **Toast** or **Snackbar** message.
+
+
+
+## 11. User Management for Admin (New)
+
+Add a user management feature for the Admin. This can be implemented either inside **ManageEventsActivity** or as a separate **Fragment**.
+
+The Admin can:
+
+* View the list of registered users in the application.
+* View details for each user: full name, email, and role.
+* Promote a regular user to the **Admin** role.
+* Demote an **Admin** back to the **Student** role.
+* Delete a user from the users list in **Firestore**.
+
+There is **no requirement to delete the user from Firebase Authentication**.
+
+Before deleting a user or changing their role, an **AlertDialog** must be displayed to ask for confirmation before performing the action.
+
+After a successful operation, display an appropriate **Toast** or **Snackbar** message.
+
+
+
+## 12. Synchronization Between SQLite and Firestore (New)
+
+In this assignment, a **full synchronization** must be performed between **SQLite** and **Firebase Firestore**.
+
+All the application's central data must be stored in **Firestore** and, in parallel, also stored in **SQLite**.
+
+When the user logs into the application, data must be loaded from **Firestore** and used to update **SQLite**.
+
+Whenever an event is added, edited, or deleted, both **Firestore** and **SQLite** must be updated.
+
+When a user adds an event to their personal list, sets a reminder, registers for an event, or writes a review, the data must be saved in **Firestore** and updated accordingly in **SQLite** as well.
+
+It is not allowed to rely only on **SQLite**, and it is not allowed to rely only on **Firestore**.
+
+You must use **SQLiteOpenHelper** when working with **SQLite**.
+
+
+
+## 13. Firebase Requirements
+
+You must use **Firebase Authentication** for:
+
+* Registration.
+* Login.
+* Logout.
+
+You must use **Firebase Firestore** to store:
+
+* User details.
+* Events.
+* Users' personal events.
+* Reviews and ratings.
+* User roles.
+
+The instructor must see that **Firestore contains existing data** for testing.
+
+**Do not leave the database empty.**
+
+At minimum, create in advance:
+
+* At least one user with the **Student** role.
+* At least one user with the **Admin** role.
+* At least 5 events.
+* At least 2 reviews, for example.

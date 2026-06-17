@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">StudentEvent</string>
+    <string-array name="event_categories">
+        <item>הרצאה</item>
+        <item>סדנה</item>
+        <item>מפגש לימודי</item>
+        <item>כנס</item>
+    </string-array>
+</resources>
