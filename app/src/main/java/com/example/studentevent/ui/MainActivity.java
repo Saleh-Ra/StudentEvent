@@ -19,7 +19,7 @@ import com.google.firebase.auth.FirebaseAuth;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnViewEvents, btnMyEvents, btnManageEvents, btnLogout;
+    private Button btnViewEvents, btnMyEvents, btnManageEvents, btnManageUsers, btnLogout;
     private SharedPreferences prefs;
 
     @Override
@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         btnViewEvents = findViewById(R.id.btnViewEvents);
         btnMyEvents = findViewById(R.id.btnMyEvents);
         btnManageEvents = findViewById(R.id.btnManageEvents);
+        btnManageUsers = findViewById(R.id.btnManageUsers);
         btnLogout = findViewById(R.id.btnLogout);
     }
 
@@ -60,8 +61,10 @@ public class MainActivity extends AppCompatActivity {
     private void setupRoleBasedUI() {
         if (isAdmin()) {
             btnManageEvents.setVisibility(View.VISIBLE);
+            btnManageUsers.setVisibility(View.VISIBLE);
         } else {
             btnManageEvents.setVisibility(View.GONE);
+            btnManageUsers.setVisibility(View.GONE);
         }
     }
 
@@ -81,6 +84,14 @@ public class MainActivity extends AppCompatActivity {
         btnManageEvents.setOnClickListener(v -> {
             if (isAdmin()) {
                 startActivity(new Intent(this, ManageEventsActivity.class));
+            } else {
+                Toast.makeText(this, R.string.access_denied_admin, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnManageUsers.setOnClickListener(v -> {
+            if (isAdmin()) {
+                startActivity(new Intent(this, UserManagementActivity.class));
             } else {
                 Toast.makeText(this, R.string.access_denied_admin, Toast.LENGTH_SHORT).show();
             }

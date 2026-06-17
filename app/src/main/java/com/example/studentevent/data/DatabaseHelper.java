@@ -189,7 +189,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Previous methods updated for new schema
-    public boolean insertEvent(String name, String organizer, String category, String date, String description, int image) {
+    public long insertEventReturningId(String name, String organizer, String category, String date, String description, int image) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_NAME, name);
@@ -198,8 +198,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COL_DATE, date);
         values.put(COL_DESCRIPTION, description);
         values.put(COL_IMAGE, image);
-        long result = db.insert(TABLE_EVENTS, null, values);
-        return result != -1;
+        return db.insert(TABLE_EVENTS, null, values);
+    }
+
+    public boolean setFirestoreId(int id, String firestoreId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_FIRESTORE_ID, firestoreId);
+        return db.update(TABLE_EVENTS, values, COL_ID + "=?", new String[]{String.valueOf(id)}) > 0;
+    }
+
+    public boolean insertEvent(String name, String organizer, String category, String date, String description, int image) {
+        return insertEventReturningId(name, organizer, category, date, description, image) != -1;
     }
 
     public boolean updateEvent(int id, String name, String organizer, String category, String date, String description, int image) {
@@ -217,6 +227,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean deleteEvent(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_MY_EVENTS, COL_MY_EVENT_ID + "=?", new String[]{String.valueOf(id)});
         return db.delete(TABLE_EVENTS, COL_ID + "=?", new String[]{String.valueOf(id)}) > 0;
     }
 

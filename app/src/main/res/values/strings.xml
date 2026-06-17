@@ -84,6 +84,47 @@
     <string name="error_review_already_exists">You already wrote a review for this event</string>
     <string name="error_review_save">Failed to save review: %s</string>
     <string name="lbl_rating">Rating:</string>
+    <string name="title_manage_events">Manage Events</string>
+    <string name="hint_event_name">Event name</string>
+    <string name="hint_organizer">Organizer name</string>
+    <string name="hint_event_date">Event date e.g. 12/06/2026</string>
+    <string name="hint_event_description">Event description</string>
+    <string name="btn_add_event">Add Event</string>
+    <string name="btn_update_event">Update Selected Event</string>
+    <string name="btn_delete_event">Delete Selected Event</string>
+    <string name="confirm_update_event">Are you sure you want to update this event?</string>
+    <string name="confirm_delete_event">Are you sure you want to delete this event?</string>
+    <string name="success_event_added">Event added successfully</string>
+    <string name="success_event_updated">Event updated successfully</string>
+    <string name="success_event_deleted">Event deleted successfully</string>
+    <string name="error_event_added">Error adding event</string>
+    <string name="error_event_updated">Error updating event</string>
+    <string name="error_event_deleted">Error deleting event</string>
+    <string name="error_select_event_first">Select an event from the list first</string>
+    <string name="event_selected_for_edit">Event selected for editing</string>
+    <string name="error_category_all">Please select a valid category</string>
+    <string name="btn_yes">Yes</string>
+    <string name="btn_no">No</string>
+    <string name="btn_manage_users">Manage Users</string>
+    <string name="title_manage_users">Manage Users</string>
+    <string name="lbl_user_name">Name: %s</string>
+    <string name="lbl_user_email">Email: %s</string>
+    <string name="lbl_user_role">Role: %s</string>
+    <string name="btn_promote_admin">Promote to Admin</string>
+    <string name="btn_demote_student">Demote to Student</string>
+    <string name="btn_delete_user">Delete User</string>
+    <string name="confirm_promote_admin">Promote this user to Admin?</string>
+    <string name="confirm_demote_student">Demote this user to Student?</string>
+    <string name="confirm_delete_user">Are you sure you want to delete this user?</string>
+    <string name="success_role_updated">User role updated</string>
+    <string name="success_user_deleted">User deleted from Firestore</string>
+
+    <string-array name="manage_event_categories">
+        <item>הרצאה</item>
+        <item>סדנה</item>
+        <item>מפגש לימודי</item>
+        <item>כנס</item>
+    </string-array>
 
     <string-array name="event_categories">
         <item>All</item>
