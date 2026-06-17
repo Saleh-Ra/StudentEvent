@@ -20,26 +20,30 @@ import com.example.studentevent.model.Event;
 
 import java.util.ArrayList;
 
+/**
+ * Purpose: Adapter for displaying events in a RecyclerView using CardView.
+ * Input: List of events and context.
+ * Output: Binds event data to UI components.
+ */
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
     private Context context;
     private ArrayList<Event> events;
+    private OnEventClickListener listener;
 
-    /**
-     * Purpose: Creates adapter for RecyclerView.
-     * Input: Context and list of events.
-     * Output: Adapter ready to display events.
-     */
+    public interface OnEventClickListener {
+        void onEventClick(Event event);
+    }
+
     public EventAdapter(Context context, ArrayList<Event> events) {
         this.context = context;
         this.events = events;
     }
 
-    /**
-     * Purpose: Creates the CardView layout for each event.
-     * Input: Parent ViewGroup and viewType.
-     * Output: EventViewHolder containing item_event layout.
-     */
+    public void setOnEventClickListener(OnEventClickListener listener) {
+        this.listener = listener;
+    }
+
     @NonNull
     @Override
     public EventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -47,11 +51,6 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         return new EventViewHolder(view);
     }
 
-    /**
-     * Purpose: Puts event data inside the CardView.
-     * Input: ViewHolder and event position.
-     * Output: Event details are displayed on screen.
-     */
     @Override
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         Event event = events.get(position);
@@ -60,79 +59,60 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         holder.txtOrganizerName.setText(event.getOrganizer());
         holder.txtCategory.setText(event.getCategory());
         holder.txtDate.setText(event.getDate());
+        holder.txtRegisteredCount.setText(context.getString(R.string.registered_users_count, event.getRegisteredCount()));
         holder.imgEvent.setImageResource(event.getImageResource());
 
         holder.btnRegister.setOnClickListener(v -> {
-            DatabaseHelper databaseHelper = new DatabaseHelper(context);
-
-            boolean success = databaseHelper.addToMyEvents(event.getId());
-
-            if (success) {
-                Toast.makeText(context, "האירוע נוסף לאירועים שלי", Toast.LENGTH_SHORT).show();
+            DatabaseHelper db = new DatabaseHelper(context);
+            if (db.addToMyEvents(event.getId())) {
+                Toast.makeText(context, R.string.success_added_to_my, Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, "האירוע כבר קיים ברשימה שלי", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.error_already_in_my, Toast.LENGTH_SHORT).show();
             }
         });
 
-        holder.btnShare.setOnClickListener(v -> {
-            shareEvent(event);
-        });
+        holder.btnShare.setOnClickListener(v -> shareEvent(event));
 
         holder.itemView.setOnClickListener(v -> {
-            if (context instanceof ManageEventsActivity) {
+            if (listener != null) {
+                listener.onEventClick(event);
+            } else if (context instanceof ManageEventsActivity) {
                 ((ManageEventsActivity) context).selectEventForEdit(event);
             }
         });
     }
 
-    /**
-     * Purpose: Returns number of events in the list.
-     * Input: None.
-     * Output: Number of events.
-     */
     @Override
     public int getItemCount() {
         return events.size();
     }
 
-    /**
-     * Purpose: Shares event details using implicit Intent.
-     * Input: Event object.
-     * Output: Opens share menu.
-     */
     private void shareEvent(Event event) {
-        String shareText = "שם האירוע: " + event.getName()
-                + "\nמארגן: " + event.getOrganizer()
-                + "\nקטגוריה: " + event.getCategory()
-                + "\nתאריך: " + event.getDate();
+        String shareText = "Event: " + event.getName()
+                + "\nOrganizer: " + event.getOrganizer()
+                + "\nCategory: " + event.getCategory()
+                + "\nDate: " + event.getDate();
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, shareText);
-
-        context.startActivity(Intent.createChooser(intent, "שתף אירוע"));
+        context.startActivity(Intent.createChooser(intent, "Share Event"));
     }
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {
-
         ImageView imgEvent;
-        TextView txtEventName, txtOrganizerName, txtCategory, txtDate;
+        TextView txtEventName, txtOrganizerName, txtCategory, txtDate, txtRegisteredCount;
         Button btnRegister;
         ImageButton btnShare;
 
-        /**
-         * Purpose: Connects CardView XML components to Java variables.
-         * Input: itemView from item_event.xml.
-         * Output: All item views are ready to use.
-         */
         public EventViewHolder(@NonNull View itemView) {
             super(itemView);
-
             imgEvent = itemView.findViewById(R.id.imgEvent);
             txtEventName = itemView.findViewById(R.id.txtEventName);
             txtOrganizerName = itemView.findViewById(R.id.txtOrganizerName);
             txtCategory = itemView.findViewById(R.id.txtCategory);
             txtDate = itemView.findViewById(R.id.txtDate);
+            txtRegisteredCount = itemView.findViewById(R.id.txtRegisteredCount);
             btnRegister = itemView.findViewById(R.id.btnRegister);
             btnShare = itemView.findViewById(R.id.btnShare);
         }

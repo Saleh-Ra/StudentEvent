@@ -14,24 +14,23 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.studentevent.R;
 
+/**
+ * Purpose: DialogFragment for filtering events by category and registered participants.
+ * Input: User selection from spinners.
+ * Output: Calls applyFilter in BrowseEventsActivity.
+ */
 public class FilterEventsFragment extends DialogFragment {
 
-    private Spinner spinnerCategoryFilter;
+    private Spinner spinnerCategoryFilter, spinnerMinParticipants;
     private Button btnConfirmFilter, btnCancelFilter;
 
-    /**
-     * Purpose: Creates a filter dialog with Spinner and buttons.
-     * Input: savedInstanceState contains previous fragment state if it exists.
-     * Output: DialogFragment view is displayed.
-     */
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        View view = LayoutInflater.from(getActivity())
-                .inflate(R.layout.fragment_filter_events, null);
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_filter_events, null);
 
         connectViews(view);
-        setupSpinner();
+        setupSpinners();
         setButtonListeners();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -40,49 +39,45 @@ public class FilterEventsFragment extends DialogFragment {
         return builder.create();
     }
 
-    /**
-     * Purpose: Connects XML components to Java variables.
-     * Input: view is the fragment layout.
-     * Output: Spinner and buttons are ready to use.
-     */
     private void connectViews(View view) {
         spinnerCategoryFilter = view.findViewById(R.id.spinnerCategoryFilter);
+        spinnerMinParticipants = view.findViewById(R.id.spinnerMinParticipants);
         btnConfirmFilter = view.findViewById(R.id.btnConfirmFilter);
         btnCancelFilter = view.findViewById(R.id.btnCancelFilter);
     }
 
-    /**
-     * Purpose: Loads event categories from strings.xml into Spinner.
-     * Input: None.
-     * Output: Spinner shows event categories.
-     */
-    private void setupSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                requireContext(),
-                R.array.event_categories,
-                android.R.layout.simple_spinner_item
-        );
+    private void setupSpinners() {
+        ArrayAdapter<CharSequence> catAdapter = ArrayAdapter.createFromResource(
+                requireContext(), R.array.event_categories, android.R.layout.simple_spinner_item);
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategoryFilter.setAdapter(catAdapter);
 
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCategoryFilter.setAdapter(adapter);
+        ArrayAdapter<CharSequence> partAdapter = ArrayAdapter.createFromResource(
+                requireContext(), R.array.min_participants_options, android.R.layout.simple_spinner_item);
+        partAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerMinParticipants.setAdapter(partAdapter);
     }
 
-    /**
-     * Purpose: Adds actions to confirm and cancel buttons.
-     * Input: None.
-     * Output: Confirm filters events, cancel closes dialog.
-     */
     private void setButtonListeners() {
         btnConfirmFilter.setOnClickListener(v -> {
-            String selectedCategory = spinnerCategoryFilter.getSelectedItem().toString();
+            String category = spinnerCategoryFilter.getSelectedItem().toString();
+            int minParticipants = getMinParticipantsValue(spinnerMinParticipants.getSelectedItemPosition());
 
             if (getActivity() instanceof BrowseEventsActivity) {
-                ((BrowseEventsActivity) getActivity()).filterEventsByCategory(selectedCategory);
+                ((BrowseEventsActivity) getActivity()).applyFilter(category, minParticipants);
             }
-
             dismiss();
         });
 
         btnCancelFilter.setOnClickListener(v -> dismiss());
+    }
+
+    private int getMinParticipantsValue(int position) {
+        switch (position) {
+            case 1: return 5;
+            case 2: return 10;
+            case 3: return 20;
+            default: return 0;
+        }
     }
 }

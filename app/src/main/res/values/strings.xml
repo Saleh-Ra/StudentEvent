@@ -1,9 +1,55 @@
 <resources>
     <string name="app_name">StudentEvent</string>
+    <string name="login_title">Login</string>
+    <string name="register_title">Register</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="full_name_hint">Full Name</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Register</string>
+    <string name="switch_to_register">Don\'t have an account? Register</string>
+    <string name="switch_to_login">Already have an account? Login</string>
+    <string name="login_failed">Login failed: %s</string>
+    <string name="registration_failed">Registration failed: %s</string>
+    <string name="registration_success">Registration successful!</string>
+    <string name="fields_empty">Please fill all fields</string>
+    <string name="role_student">Student</string>
+    <string name="role_admin">Admin</string>
+    <string name="btn_view_events">View Events</string>
+    <string name="btn_my_events">My Events</string>
+    <string name="btn_manage_events">Manage Events</string>
+    <string name="btn_logout">Logout</string>
+    <string name="btn_back">Back</string>
+    <string name="title_browse_events">Browse Events</string>
+    <string name="btn_filter_events">Filter Events</string>
+    <string name="btn_reset_filter">Reset Filter</string>
+    <string name="btn_add_to_my_events">Add to My Events</string>
+    <string name="registered_users_count">Registered: %d</string>
+    <string name="success_added_to_my">Added to My Events</string>
+    <string name="error_already_in_my">Event already in your list</string>
+    <string name="error_sync_failed">Synchronization failed</string>
+    <string name="category_all">All</string>
+    <string name="participants_all">All</string>
+    <string name="participants_5">At least 5 participants</string>
+    <string name="participants_10">At least 10 participants</string>
+    <string name="participants_20">At least 20 participants</string>
+    <string name="btn_apply_filter">Apply Filter</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="lbl_category">Category:</string>
+    <string name="lbl_min_participants">Min Participants:</string>
+
     <string-array name="event_categories">
+        <item>All</item>
         <item>הרצאה</item>
         <item>סדנה</item>
         <item>מפגש לימודי</item>
         <item>כנס</item>
+    </string-array>
+
+    <string-array name="min_participants_options">
+        <item>@string/participants_all</item>
+        <item>@string/participants_5</item>
+        <item>@string/participants_10</item>
+        <item>@string/participants_20</item>
     </string-array>
 </resources>
