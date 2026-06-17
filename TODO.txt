@@ -21,7 +21,7 @@ Additionally, in this assignment you must:
 * Maintain separation between the UI code and the application's business logic.
 * Write clean, organized code divided into functions with meaningful variable names.
 * Document every function briefly: explain what it does, what input it receives, and what it returns.
-
+///////////////////////////////////////////////////////////////////////////////////////
 
 sections:
 
@@ -94,7 +94,7 @@ The application will have two types of users:
 The **"Manage Events"** button should be displayed only for an Admin. The application must check the user's role in the code and not rely only on hiding the button.
 
 
-///////////////////////////////////////////////////////////////////////////////////////
+
 ## 4. BrowseEventsActivity (Events Browsing Screen)
 
 Continue using the **BrowseEventsActivity** screen from the previous assignment. This screen will display all existing events in the application.

@@ -1,7 +1,10 @@
 package com.example.studentevent.ui;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -10,105 +13,109 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.studentevent.data.DatabaseHelper;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
+/**
+ * Purpose: Screen for browsing all events. Synchronizes data with Firestore and uses SQLite for local display.
+ * Input: Events from Firestore/SQLite.
+ * Output: Displayed list of events with filtering capabilities.
+ */
 public class BrowseEventsActivity extends AppCompatActivity {
 
     private RecyclerView recyclerEvents;
-    private Button btnFilterEvents, btnResetFilter;
-    private ArrayList<Event> eventList;
+    private Button btnFilterEvents, btnResetFilter, btnBack;
+    
     private EventAdapter eventAdapter;
+    private DatabaseHelper dbHelper;
+    private FirebaseFirestore db;
 
-    private DatabaseHelper databaseHelper;
-
-    private Button btnBack;
-
-    /**
-     * Purpose: Starts the browse events screen.
-     * Input: savedInstanceState contains previous activity state if it exists.
-     * Output: Displays all events in RecyclerView.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browse_events);
 
-        databaseHelper = new DatabaseHelper(this);
+        dbHelper = new DatabaseHelper(this);
+        db = FirebaseFirestore.getInstance();
 
         connectViews();
-        createEventsList();
-        setupRecyclerView();
         setButtonListeners();
+        
+        // Synchronize then load
+        syncFromFirestore();
     }
 
-    /**
-     * Purpose: Connects XML components to Java variables.
-     * Input: None.
-     * Output: Buttons and RecyclerView are ready to use.
-     */
     private void connectViews() {
         recyclerEvents = findViewById(R.id.recyclerEvents);
         btnFilterEvents = findViewById(R.id.btnFilterEvents);
         btnResetFilter = findViewById(R.id.btnResetFilter);
         btnBack = findViewById(R.id.btnBack);
+        
+        // Adding a progress bar programmatically or checking if it exists in layout
+        // For now, let's assume we might add it to layout or just use Toasts
     }
 
-    /**
-     * Purpose: Creates temporary event data until SQLite is connected.
-     * Input: None.
-     * Output: ArrayList with example events.
-     */
-    /**
-     * Purpose: Loads all events from SQLite.
-     * Input: None.
-     * Output: ArrayList with events from database.
-     */
-    private void createEventsList() {
-        eventList = databaseHelper.getAllEvents();
-    }
-
-    /**
-     * Purpose: Sets RecyclerView layout and adapter.
-     * Input: None.
-     * Output: Events are displayed as CardViews.
-     */
-    private void setupRecyclerView() {
-        eventAdapter = new EventAdapter(this, eventList);
-        recyclerEvents.setLayoutManager(new LinearLayoutManager(this));
-        recyclerEvents.setAdapter(eventAdapter);
-    }
-
-    /**
-     * Purpose: Adds button click actions.
-     * Input: None.
-     * Output: Filter button opens dialog, reset button reloads all events.
-     */
     private void setButtonListeners() {
         btnFilterEvents.setOnClickListener(v -> {
             FilterEventsFragment filterFragment = new FilterEventsFragment();
             filterFragment.show(getSupportFragmentManager(), "FilterEventsFragment");
         });
 
-        btnResetFilter.setOnClickListener(v -> {
-            createEventsList();
-            eventAdapter = new EventAdapter(this, eventList);
-            recyclerEvents.setAdapter(eventAdapter);
-        });
+        btnResetFilter.setOnClickListener(v -> loadEventsFromSQLite());
 
         btnBack.setOnClickListener(v -> finish());
     }
 
-    public void filterEventsByCategory(String selectedCategory) {
-        ArrayList<Event> filteredList = new ArrayList<>();
+    /**
+     * Purpose: Synchronizes Firestore events to the local SQLite database.
+     */
+    private void syncFromFirestore() {
+        db.collection("events").get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Event event = document.toObject(Event.class);
+                            event.setFirestoreId(document.getId());
+                            // Default image if none provided in Firestore
+                            if (event.getImageResource() == 0) {
+                                event.setImageResource(R.mipmap.ic_launcher);
+                            }
+                            dbHelper.syncEvent(event);
+                        }
+                        loadEventsFromSQLite();
+                    } else {
+                        Toast.makeText(this, R.string.error_sync_failed, Toast.LENGTH_SHORT).show();
+                        loadEventsFromSQLite(); // Load local data anyway
+                    }
+                });
+    }
 
-        for (Event event : eventList) {
-            if (event.getCategory().equals(selectedCategory)) {
-                filteredList.add(event);
-            }
-        }
+    /**
+     * Purpose: Loads events from SQLite and updates the RecyclerView.
+     */
+    private void loadEventsFromSQLite() {
+        ArrayList<Event> eventList = dbHelper.getAllEvents();
+        setupRecyclerView(eventList);
+    }
 
-        eventAdapter = new EventAdapter(this, filteredList);
+    /**
+     * Purpose: Applies filters to the event list using an SQLite query.
+     */
+    public void applyFilter(String category, int minParticipants) {
+        ArrayList<Event> filteredList = dbHelper.getEventsByCategoryAndParticipants(category, minParticipants);
+        setupRecyclerView(filteredList);
+    }
+
+    private void setupRecyclerView(ArrayList<Event> list) {
+        eventAdapter = new EventAdapter(this, list);
+        eventAdapter.setOnEventClickListener(event -> {
+            // Open EventDetailsFragment (Section 6)
+            // For now, just toast or keep it ready
+            Toast.makeText(this, "Clicked: " + event.getName(), Toast.LENGTH_SHORT).show();
+        });
+        recyclerEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerEvents.setAdapter(eventAdapter);
     }
 }

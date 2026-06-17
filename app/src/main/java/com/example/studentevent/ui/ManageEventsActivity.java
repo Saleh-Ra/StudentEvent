@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class ManageEventsActivity extends AppCompatActivity {
 
-    private EditText edtEventName, edtOrganizer, edtEventDate;
+    private EditText edtEventName, edtOrganizer, edtEventDate, edtDescription;
     private Spinner spinnerManageCategory;
     private Button btnAddEvent, btnUpdateEvent, btnDeleteEvent;
     private RecyclerView recyclerManageEvents;
@@ -59,6 +59,7 @@ public class ManageEventsActivity extends AppCompatActivity {
         edtEventName = findViewById(R.id.edtEventName);
         edtOrganizer = findViewById(R.id.edtOrganizer);
         edtEventDate = findViewById(R.id.edtEventDate);
+        edtDescription = findViewById(R.id.edtDescription);
         spinnerManageCategory = findViewById(R.id.spinnerManageCategory);
         btnAddEvent = findViewById(R.id.btnAddEvent);
         btnUpdateEvent = findViewById(R.id.btnUpdateEvent);
@@ -118,8 +119,9 @@ public class ManageEventsActivity extends AppCompatActivity {
         String organizer = edtOrganizer.getText().toString();
         String category = spinnerManageCategory.getSelectedItem().toString();
         String date = edtEventDate.getText().toString();
+        String description = edtDescription.getText().toString();
 
-        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty()) {
+        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty() || description.isEmpty()) {
             Toast.makeText(this, "נא למלא את כל השדות", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -129,6 +131,7 @@ public class ManageEventsActivity extends AppCompatActivity {
                 organizer,
                 category,
                 date,
+                description,
                 R.mipmap.ic_launcher
         );
 
@@ -161,8 +164,9 @@ public class ManageEventsActivity extends AppCompatActivity {
         String organizer = edtOrganizer.getText().toString();
         String category = spinnerManageCategory.getSelectedItem().toString();
         String date = edtEventDate.getText().toString();
+        String description = edtDescription.getText().toString();
 
-        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty()) {
+        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty() || description.isEmpty()) {
             Toast.makeText(this, "נא למלא את כל השדות", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -173,6 +177,7 @@ public class ManageEventsActivity extends AppCompatActivity {
                 organizer,
                 category,
                 date,
+                description,
                 R.mipmap.ic_launcher
         );
 
@@ -228,6 +233,7 @@ public class ManageEventsActivity extends AppCompatActivity {
         edtEventName.setText(selectedEvent.getName());
         edtOrganizer.setText(selectedEvent.getOrganizer());
         edtEventDate.setText(selectedEvent.getDate());
+        edtDescription.setText(selectedEvent.getDescription());
 
         for (int i = 0; i < spinnerManageCategory.getCount(); i++) {
             if (spinnerManageCategory.getItemAtPosition(i).toString().equals(selectedEvent.getCategory())) {
@@ -248,6 +254,7 @@ public class ManageEventsActivity extends AppCompatActivity {
         edtEventName.setText("");
         edtOrganizer.setText("");
         edtEventDate.setText("");
+        edtDescription.setText("");
         spinnerManageCategory.setSelection(0);
         selectedEventId = -1;
     }
