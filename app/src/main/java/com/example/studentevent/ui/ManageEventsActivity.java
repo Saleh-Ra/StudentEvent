@@ -9,37 +9,36 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.studentevent.data.DatabaseHelper;
+import com.example.studentevent.data.EventFirestoreSync;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
+/**
+ * Purpose: Admin screen for managing events in SQLite and Firestore.
+ * Input: Event form data and selected event.
+ * Output: CRUD operations on events with confirmation dialogs.
+ */
 public class ManageEventsActivity extends AppCompatActivity {
 
     private EditText edtEventName, edtOrganizer, edtEventDate, edtDescription;
     private Spinner spinnerManageCategory;
-    private Button btnAddEvent, btnUpdateEvent, btnDeleteEvent;
+    private Button btnAddEvent, btnUpdateEvent, btnDeleteEvent, btnBack;
     private RecyclerView recyclerManageEvents;
 
     private DatabaseHelper databaseHelper;
     private ArrayList<Event> eventsList;
     private EventAdapter eventAdapter;
+    private Event selectedEvent;
 
-    private Button btnBack;
-
-    private int selectedEventId = -1;
-
-    /**
-     * Purpose: Starts the manage events screen.
-     * Input: savedInstanceState contains previous activity state if it exists.
-     * Output: Displays form and events from SQLite.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +56,6 @@ public class ManageEventsActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_manage_events);
-
         databaseHelper = new DatabaseHelper(this);
 
         connectViews();
@@ -66,11 +64,6 @@ public class ManageEventsActivity extends AppCompatActivity {
         setButtonListeners();
     }
 
-    /**
-     * Purpose: Connects XML components to Java variables.
-     * Input: None.
-     * Output: All views are ready to use.
-     */
     private void connectViews() {
         edtEventName = findViewById(R.id.edtEventName);
         edtOrganizer = findViewById(R.id.edtOrganizer);
@@ -84,194 +77,185 @@ public class ManageEventsActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
     }
 
-    /**
-     * Purpose: Loads categories from strings.xml into Spinner.
-     * Input: None.
-     * Output: Spinner shows event categories.
-     */
     private void setupSpinner() {
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this,
-                R.array.event_categories,
-                android.R.layout.simple_spinner_item
-        );
-
+                this, R.array.manage_event_categories, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerManageCategory.setAdapter(adapter);
     }
 
-    /**
-     * Purpose: Loads all events from SQLite and displays them.
-     * Input: None.
-     * Output: RecyclerView shows all stored events.
-     */
     private void loadEvents() {
         eventsList = databaseHelper.getAllEvents();
-
         eventAdapter = new EventAdapter(this, eventsList);
         recyclerManageEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerManageEvents.setAdapter(eventAdapter);
     }
 
-    /**
-     * Purpose: Adds actions to buttons.
-     * Input: None.
-     * Output: User can add, update, and delete events.
-     */
     private void setButtonListeners() {
         btnAddEvent.setOnClickListener(v -> addEvent());
-        btnUpdateEvent.setOnClickListener(v -> updateEvent());
-        btnDeleteEvent.setOnClickListener(v -> deleteEvent());
+        btnUpdateEvent.setOnClickListener(v -> confirmUpdateEvent());
+        btnDeleteEvent.setOnClickListener(v -> confirmDeleteEvent());
         btnBack.setOnClickListener(v -> finish());
     }
 
-    /**
-     * Purpose: Adds a new event to SQLite.
-     * Input: Values from EditTexts and Spinner.
-     * Output: New event is saved and list is refreshed.
-     */
+    private boolean validateForm() {
+        String name = edtEventName.getText().toString().trim();
+        String organizer = edtOrganizer.getText().toString().trim();
+        String date = edtEventDate.getText().toString().trim();
+        String description = edtDescription.getText().toString().trim();
+
+        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty() || description.isEmpty()) {
+            Toast.makeText(this, R.string.fields_empty, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private String getSelectedCategory() {
+        return spinnerManageCategory.getSelectedItem().toString();
+    }
+
+    private int getImageForCategory(String category) {
+        if ("סדנה".equals(category) || "כנס".equals(category)) {
+            return R.drawable.ic_launcher_background;
+        }
+        return R.drawable.ic_launcher_foreground;
+    }
+
     private void addEvent() {
-        String name = edtEventName.getText().toString();
-        String organizer = edtOrganizer.getText().toString();
-        String category = spinnerManageCategory.getSelectedItem().toString();
-        String date = edtEventDate.getText().toString();
-        String description = edtDescription.getText().toString();
-
-        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty() || description.isEmpty()) {
-            Toast.makeText(this, "נא למלא את כל השדות", Toast.LENGTH_SHORT).show();
+        if (!validateForm()) {
             return;
         }
 
-        boolean success = databaseHelper.insertEvent(
-                name,
-                organizer,
-                category,
-                date,
-                description,
-                R.mipmap.ic_launcher
-        );
+        String name = edtEventName.getText().toString().trim();
+        String organizer = edtOrganizer.getText().toString().trim();
+        String category = getSelectedCategory();
+        String date = edtEventDate.getText().toString().trim();
+        String description = edtDescription.getText().toString().trim();
+        int image = getImageForCategory(category);
 
-        if (success) {
-            Toast.makeText(this, "האירוע נוסף בהצלחה", Toast.LENGTH_SHORT).show();
-            clearFields();
-            loadEvents();
-        } else {
-            Toast.makeText(this, "שגיאה בהוספת האירוע", Toast.LENGTH_SHORT).show();
-        }
+        EventFirestoreSync.addEvent(name, organizer, category, date, description, image,
+                firestoreId -> {
+                    long sqliteId = databaseHelper.insertEventReturningId(
+                            name, organizer, category, date, description, image);
+                    if (sqliteId != -1 && databaseHelper.setFirestoreId((int) sqliteId, firestoreId)) {
+                        Toast.makeText(this, R.string.success_event_added, Toast.LENGTH_SHORT).show();
+                        clearFields();
+                        loadEvents();
+                    } else {
+                        Toast.makeText(this, R.string.error_event_added, Toast.LENGTH_SHORT).show();
+                    }
+                },
+                e -> Toast.makeText(this, getString(R.string.error_firestore, e.getMessage()), Toast.LENGTH_SHORT).show());
     }
 
-    /**
-     * Purpose: Updates selected event in SQLite.
-     * Input: Selected event id and new form values.
-     * Output: Event is updated and list is refreshed.
-     */
-    /**
-     * Purpose: Updates selected event in SQLite.
-     * Input: Selected event id and new form values.
-     * Output: Event is updated and list is refreshed.
-     */
+    private void confirmUpdateEvent() {
+        if (selectedEvent == null) {
+            Toast.makeText(this, R.string.error_select_event_first, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!validateForm()) {
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.confirm_update_event)
+                .setPositiveButton(R.string.btn_yes, (dialog, which) -> updateEvent())
+                .setNegativeButton(R.string.btn_no, null)
+                .show();
+    }
+
     private void updateEvent() {
-        if (selectedEventId == -1) {
-            Toast.makeText(this, "בחר אירוע מהרשימה קודם", Toast.LENGTH_SHORT).show();
+        String name = edtEventName.getText().toString().trim();
+        String organizer = edtOrganizer.getText().toString().trim();
+        String category = getSelectedCategory();
+        String date = edtEventDate.getText().toString().trim();
+        String description = edtDescription.getText().toString().trim();
+        int image = getImageForCategory(category);
+        int registeredCount = selectedEvent.getRegisteredCount();
+
+        Runnable updateSqlite = () -> {
+            boolean success = databaseHelper.updateEvent(
+                    selectedEvent.getId(), name, organizer, category, date, description, image);
+            if (success) {
+                Toast.makeText(this, R.string.success_event_updated, Toast.LENGTH_SHORT).show();
+                clearFields();
+                loadEvents();
+            } else {
+                Toast.makeText(this, R.string.error_event_updated, Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        String firestoreId = selectedEvent.getFirestoreId();
+        if (firestoreId == null || firestoreId.isEmpty()) {
+            updateSqlite.run();
             return;
         }
 
-        String name = edtEventName.getText().toString();
-        String organizer = edtOrganizer.getText().toString();
-        String category = spinnerManageCategory.getSelectedItem().toString();
-        String date = edtEventDate.getText().toString();
-        String description = edtDescription.getText().toString();
-
-        if (name.isEmpty() || organizer.isEmpty() || date.isEmpty() || description.isEmpty()) {
-            Toast.makeText(this, "נא למלא את כל השדות", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        boolean success = databaseHelper.updateEvent(
-                selectedEventId,
-                name,
-                organizer,
-                category,
-                date,
-                description,
-                R.mipmap.ic_launcher
-        );
-
-        if (success) {
-            Toast.makeText(this, "האירוע עודכן בהצלחה", Toast.LENGTH_SHORT).show();
-            clearFields();
-            loadEvents();
-        } else {
-            Toast.makeText(this, "שגיאה בעדכון האירוע", Toast.LENGTH_SHORT).show();
-        }
+        EventFirestoreSync.updateEvent(firestoreId, name, organizer, category, date, description,
+                image, registeredCount,
+                aVoid -> updateSqlite.run(),
+                e -> Toast.makeText(this, getString(R.string.error_firestore, e.getMessage()), Toast.LENGTH_SHORT).show());
     }
 
-    /**
-     * Purpose: Deletes selected event from SQLite.
-     * Input: Selected event id.
-     * Output: Event is deleted and list is refreshed.
-     */
-    /**
-     * Purpose: Deletes selected event from SQLite.
-     * Input: Selected event id.
-     * Output: Event is deleted and list is refreshed.
-     */
-    /**
-     * Purpose: Deletes selected event from SQLite.
-     * Input: Selected event id.
-     * Output: Event is deleted and list is refreshed.
-     */
+    private void confirmDeleteEvent() {
+        if (selectedEvent == null) {
+            Toast.makeText(this, R.string.error_select_event_first, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.confirm_delete_event)
+                .setPositiveButton(R.string.btn_yes, (dialog, which) -> deleteEvent())
+                .setNegativeButton(R.string.btn_no, null)
+                .show();
+    }
+
     private void deleteEvent() {
-        if (selectedEventId == -1) {
-            Toast.makeText(this, "בחר אירוע מהרשימה קודם", Toast.LENGTH_SHORT).show();
+        Runnable deleteSqlite = () -> {
+            if (databaseHelper.deleteEvent(selectedEvent.getId())) {
+                Toast.makeText(this, R.string.success_event_deleted, Toast.LENGTH_SHORT).show();
+                clearFields();
+                loadEvents();
+            } else {
+                Toast.makeText(this, R.string.error_event_deleted, Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        String firestoreId = selectedEvent.getFirestoreId();
+        if (firestoreId == null || firestoreId.isEmpty()) {
+            deleteSqlite.run();
             return;
         }
 
-        boolean success = databaseHelper.deleteEvent(selectedEventId);
-
-        if (success) {
-            Toast.makeText(this, "האירוע נמחק בהצלחה", Toast.LENGTH_SHORT).show();
-            clearFields();
-            loadEvents();
-        } else {
-            Toast.makeText(this, "שגיאה במחיקת האירוע", Toast.LENGTH_SHORT).show();
-        }
+        EventFirestoreSync.deleteEvent(firestoreId,
+                aVoid -> deleteSqlite.run(),
+                e -> Toast.makeText(this, getString(R.string.error_firestore, e.getMessage()), Toast.LENGTH_SHORT).show());
     }
 
-    /**
-     * Purpose: Fills the form with selected event details.
-     * Input: selectedEvent is the event clicked by the user.
-     * Output: Form fields contain selected event data for update/delete.
-     */
-    public void selectEventForEdit(Event selectedEvent) {
-        selectedEventId = selectedEvent.getId();
-
-        edtEventName.setText(selectedEvent.getName());
-        edtOrganizer.setText(selectedEvent.getOrganizer());
-        edtEventDate.setText(selectedEvent.getDate());
-        edtDescription.setText(selectedEvent.getDescription());
+    public void selectEventForEdit(Event event) {
+        selectedEvent = event;
+        edtEventName.setText(event.getName());
+        edtOrganizer.setText(event.getOrganizer());
+        edtEventDate.setText(event.getDate());
+        edtDescription.setText(event.getDescription());
 
         for (int i = 0; i < spinnerManageCategory.getCount(); i++) {
-            if (spinnerManageCategory.getItemAtPosition(i).toString().equals(selectedEvent.getCategory())) {
+            if (spinnerManageCategory.getItemAtPosition(i).toString().equals(event.getCategory())) {
                 spinnerManageCategory.setSelection(i);
                 break;
             }
         }
 
-        Toast.makeText(this, "האירוע נבחר לעריכה", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.event_selected_for_edit, Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Purpose: Clears input fields after add/update.
-     * Input: None.
-     * Output: Form becomes empty.
-     */
     private void clearFields() {
         edtEventName.setText("");
         edtOrganizer.setText("");
         edtEventDate.setText("");
         edtDescription.setText("");
         spinnerManageCategory.setSelection(0);
-        selectedEventId = -1;
+        selectedEvent = null;
     }
 }
