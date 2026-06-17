@@ -57,6 +57,33 @@
     <string name="average_rating">Average rating: %.1f</string>
     <string name="average_rating_none">Average rating: N/A</string>
     <string name="review_item">%1$s - %2$d/5: %3$s</string>
+    <string name="btn_set_reminder">Set Reminder</string>
+    <string name="btn_remove_my_event">Remove from My List</string>
+    <string name="btn_view_summary">View Summary</string>
+    <string name="btn_write_review">Write Review</string>
+    <string name="success_reminder_set">Reminder set for %s</string>
+    <string name="success_removed_my_event">Event removed from your list</string>
+    <string name="error_remove_my_event">Error removing event</string>
+    <string name="warning_expired_reminders">Some reminders have passed. Check your events.</string>
+    <string name="title_event_summary">Event Summary</string>
+    <string name="summary_event_name">Event: %s</string>
+    <string name="summary_organizer">Organizer: %s</string>
+    <string name="summary_category">Category: %s</string>
+    <string name="summary_event_date">Event date: %s</string>
+    <string name="summary_reminder_date">Reminder date: %s</string>
+    <string name="summary_participation_registered">Participation: Registered</string>
+    <string name="summary_participation_not_registered">Participation: Not registered</string>
+    <string name="btn_share_summary">Share Event Summary</string>
+    <string name="btn_close">Close</string>
+    <string name="title_write_review">Write Review</string>
+    <string name="hint_review_text">Your review</string>
+    <string name="btn_save_review">Save Review</string>
+    <string name="success_review_saved">Review saved</string>
+    <string name="error_review_empty">Please enter a review</string>
+    <string name="error_review_not_registered">You must register for this event to write a review</string>
+    <string name="error_review_already_exists">You already wrote a review for this event</string>
+    <string name="error_review_save">Failed to save review: %s</string>
+    <string name="lbl_rating">Rating:</string>
 
     <string-array name="event_categories">
         <item>All</item>
@@ -64,6 +91,14 @@
         <item>סדנה</item>
         <item>מפגש לימודי</item>
         <item>כנס</item>
+    </string-array>
+
+    <string-array name="rating_options">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
     </string-array>
 
     <string-array name="min_participants_options">

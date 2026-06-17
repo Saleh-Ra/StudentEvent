@@ -20,6 +20,7 @@ public class Event {
     private int imageResource;
     private int registeredCount;
     private boolean userRegistered; // New field for Section 6
+    private String reminderDate;
 
     public Event() {
         // Required for Firestore
@@ -69,4 +70,7 @@ public class Event {
 
     public boolean isUserRegistered() { return userRegistered; }
     public void setUserRegistered(boolean userRegistered) { this.userRegistered = userRegistered; }
+
+    public String getReminderDate() { return reminderDate; }
+    public void setReminderDate(String reminderDate) { this.reminderDate = reminderDate; }
 }
