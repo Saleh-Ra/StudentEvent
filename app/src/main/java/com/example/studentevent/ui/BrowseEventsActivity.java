@@ -1,9 +1,10 @@
 package com.example.studentevent.ui;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.studentevent.data.DatabaseHelper;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -35,6 +37,13 @@ public class BrowseEventsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!isUserLoggedIn()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_browse_events);
 
         dbHelper = new DatabaseHelper(this);
@@ -47,14 +56,16 @@ public class BrowseEventsActivity extends AppCompatActivity {
         syncFromFirestore();
     }
 
+    private boolean isUserLoggedIn() {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        return prefs.contains("user_email") && FirebaseAuth.getInstance().getCurrentUser() != null;
+    }
+
     private void connectViews() {
         recyclerEvents = findViewById(R.id.recyclerEvents);
         btnFilterEvents = findViewById(R.id.btnFilterEvents);
         btnResetFilter = findViewById(R.id.btnResetFilter);
         btnBack = findViewById(R.id.btnBack);
-        
-        // Adding a progress bar programmatically or checking if it exists in layout
-        // For now, let's assume we might add it to layout or just use Toasts
     }
 
     private void setButtonListeners() {
@@ -78,10 +89,7 @@ public class BrowseEventsActivity extends AppCompatActivity {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             Event event = document.toObject(Event.class);
                             event.setFirestoreId(document.getId());
-                            // Default image if none provided in Firestore
-                            if (event.getImageResource() == 0) {
-                                event.setImageResource(R.mipmap.ic_launcher);
-                            }
+                            event.setImageResource(getImageForCategory(event.getCategory()));
                             dbHelper.syncEvent(event);
                         }
                         loadEventsFromSQLite();
@@ -111,11 +119,25 @@ public class BrowseEventsActivity extends AppCompatActivity {
     private void setupRecyclerView(ArrayList<Event> list) {
         eventAdapter = new EventAdapter(this, list);
         eventAdapter.setOnEventClickListener(event -> {
-            // Open EventDetailsFragment (Section 6)
-            // For now, just toast or keep it ready
-            Toast.makeText(this, "Clicked: " + event.getName(), Toast.LENGTH_SHORT).show();
+            EventDetailsFragment detailsFragment = EventDetailsFragment.newInstance(event.getId());
+            detailsFragment.show(getSupportFragmentManager(), "EventDetailsFragment");
         });
         recyclerEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerEvents.setAdapter(eventAdapter);
+    }
+
+    /**
+     * Purpose: Returns a local drawable image based on event category.
+     * Input: Category name.
+     * Output: Drawable resource id.
+     */
+    private int getImageForCategory(String category) {
+        if ("סדנה".equals(category)) {
+            return R.drawable.ic_launcher_background;
+        }
+        if ("כנס".equals(category)) {
+            return R.drawable.ic_launcher_background;
+        }
+        return R.drawable.ic_launcher_foreground;
     }
 }

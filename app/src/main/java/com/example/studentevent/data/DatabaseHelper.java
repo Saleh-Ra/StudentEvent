@@ -26,6 +26,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_DESCRIPTION = "description";
     public static final String COL_IMAGE = "image";
     public static final String COL_REGISTERED_COUNT = "registered_count";
+    public static final String COL_IS_REGISTERED = "is_registered"; // Local flag for user's participation
 
     public static final String TABLE_MY_EVENTS = "my_events";
     public static final String COL_MY_ID = "id";
@@ -49,7 +50,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + COL_DATE + " TEXT, "
                 + COL_DESCRIPTION + " TEXT, "
                 + COL_IMAGE + " INTEGER, "
-                + COL_REGISTERED_COUNT + " INTEGER DEFAULT 0)";
+                + COL_REGISTERED_COUNT + " INTEGER DEFAULT 0, "
+                + COL_IS_REGISTERED + " INTEGER DEFAULT 0)";
 
         db.execSQL(createEventsTable);
 
@@ -153,8 +155,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String desc = cursor.getString(cursor.getColumnIndexOrThrow(COL_DESCRIPTION));
         int image = cursor.getInt(cursor.getColumnIndexOrThrow(COL_IMAGE));
         int count = cursor.getInt(cursor.getColumnIndexOrThrow(COL_REGISTERED_COUNT));
+        boolean isRegistered = cursor.getInt(cursor.getColumnIndexOrThrow(COL_IS_REGISTERED)) == 1;
 
-        return new Event(id, fId, name, organizer, category, date, desc, image, count);
+        Event event = new Event(id, fId, name, organizer, category, date, desc, image, count);
+        event.setUserRegistered(isRegistered);
+        return event;
+    }
+
+    public boolean isUserRegistered(int eventId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_EVENTS, new String[]{COL_IS_REGISTERED}, COL_ID + "=?",
+                new String[]{String.valueOf(eventId)}, null, null, null);
+        boolean registered = false;
+        if (cursor.moveToFirst()) {
+            registered = cursor.getInt(0) == 1;
+        }
+        cursor.close();
+        return registered;
+    }
+
+    public boolean setRegistrationStatus(int eventId, boolean registered) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_IS_REGISTERED, registered ? 1 : 0);
+        return db.update(TABLE_EVENTS, values, COL_ID + "=?", new String[]{String.valueOf(eventId)}) > 0;
+    }
+
+    public boolean updateRegisteredCount(int eventId, int newCount) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_REGISTERED_COUNT, newCount);
+        return db.update(TABLE_EVENTS, values, COL_ID + "=?", new String[]{String.valueOf(eventId)}) > 0;
     }
 
     // Previous methods updated for new schema

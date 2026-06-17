@@ -58,12 +58,15 @@ public class MainActivity extends AppCompatActivity {
      * Purpose: Displays management button only for Admin users.
      */
     private void setupRoleBasedUI() {
-        String role = prefs.getString("user_role", "Student");
-        if (role.equals("Admin")) {
+        if (isAdmin()) {
             btnManageEvents.setVisibility(View.VISIBLE);
         } else {
             btnManageEvents.setVisibility(View.GONE);
         }
+    }
+
+    private boolean isAdmin() {
+        return getString(R.string.role_admin).equals(prefs.getString("user_role", getString(R.string.role_student)));
     }
 
     private void setButtonListeners() {
@@ -76,11 +79,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnManageEvents.setOnClickListener(v -> {
-            String role = prefs.getString("user_role", "Student");
-            if (role.equals("Admin")) {
+            if (isAdmin()) {
                 startActivity(new Intent(this, ManageEventsActivity.class));
             } else {
-                Toast.makeText(this, "Access Denied: Admins Only", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.access_denied_admin, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseAuth.getInstance().signOut();
         SharedPreferences.Editor editor = prefs.edit();
         editor.clear();
-        editor.apply();
+        editor.commit();
         navigateToLogin();
     }
 

@@ -1,5 +1,7 @@
 package com.example.studentevent.ui;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
@@ -11,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.studentevent.data.DatabaseHelper;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
@@ -32,6 +35,13 @@ public class MyEventsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!isUserLoggedIn()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_my_events);
         databaseHelper = new DatabaseHelper(this);
 
@@ -40,6 +50,11 @@ public class MyEventsActivity extends AppCompatActivity {
         setupRecyclerView();
         checkExpiredReminders();
         setButtonListeners();
+    }
+
+    private boolean isUserLoggedIn() {
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        return prefs.contains("user_email") && FirebaseAuth.getInstance().getCurrentUser() != null;
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.example.studentevent.ui;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.studentevent.data.DatabaseHelper;
 import com.example.studentevent.R;
 import com.example.studentevent.model.Event;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
@@ -40,6 +43,19 @@ public class ManageEventsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        if (!prefs.contains("user_email") || FirebaseAuth.getInstance().getCurrentUser() == null) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+        if (!getString(R.string.role_admin).equals(prefs.getString("user_role", getString(R.string.role_student)))) {
+            Toast.makeText(this, R.string.access_denied_admin, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_manage_events);
 
         databaseHelper = new DatabaseHelper(this);
