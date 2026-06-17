@@ -15,6 +15,11 @@
     <string name="fields_empty">Please fill all fields</string>
     <string name="role_student">Student</string>
     <string name="role_admin">Admin</string>
+    <string name="access_denied_admin">Access denied: Admins only</string>
+    <string name="error_fetch_user_data">Error fetching user data</string>
+    <string name="error_user_profile_missing">User profile not found. Please register again.</string>
+    <string name="error_firestore">Firestore error: %s</string>
+    <string name="logo_content_description">Student Event Logo</string>
     <string name="btn_view_events">View Events</string>
     <string name="btn_my_events">My Events</string>
     <string name="btn_manage_events">Manage Events</string>
@@ -37,6 +42,21 @@
     <string name="btn_cancel">Cancel</string>
     <string name="lbl_category">Category:</string>
     <string name="lbl_min_participants">Min Participants:</string>
+    <string name="share_event_chooser">Share Event</string>
+    <string name="share_event_text">Event: %1$s\nOrganizer: %2$s\nCategory: %3$s\nDate: %4$s</string>
+    <string name="btn_register_for_event">Register for Event</string>
+    <string name="btn_registered">Registered</string>
+    <string name="btn_share_event">Share Event</string>
+    <string name="status_registered">You are registered for this event.</string>
+    <string name="status_not_registered">You have not registered for this event yet.</string>
+    <string name="success_event_registration">Registered successfully!</string>
+    <string name="error_event_registration">Registration failed: %s</string>
+    <string name="error_already_registered_event">You are already registered for this event.</string>
+    <string name="lbl_reviews">Reviews:</string>
+    <string name="no_reviews">No reviews yet.</string>
+    <string name="average_rating">Average rating: %.1f</string>
+    <string name="average_rating_none">Average rating: N/A</string>
+    <string name="review_item">%1$s - %2$d/5: %3$s</string>
 
     <string-array name="event_categories">
         <item>All</item>

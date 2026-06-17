@@ -19,6 +19,7 @@ public class Event {
     private String description;
     private int imageResource;
     private int registeredCount;
+    private boolean userRegistered; // New field for Section 6
 
     public Event() {
         // Required for Firestore
@@ -65,4 +66,7 @@ public class Event {
 
     public int getRegisteredCount() { return registeredCount; }
     public void setRegisteredCount(int registeredCount) { this.registeredCount = registeredCount; }
+
+    public boolean isUserRegistered() { return userRegistered; }
+    public void setUserRegistered(boolean userRegistered) { this.userRegistered = userRegistered; }
 }

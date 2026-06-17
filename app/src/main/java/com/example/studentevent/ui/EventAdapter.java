@@ -88,15 +88,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     }
 
     private void shareEvent(Event event) {
-        String shareText = "Event: " + event.getName()
-                + "\nOrganizer: " + event.getOrganizer()
-                + "\nCategory: " + event.getCategory()
-                + "\nDate: " + event.getDate();
+        String shareText = context.getString(R.string.share_event_text,
+                event.getName(), event.getOrganizer(), event.getCategory(), event.getDate());
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, shareText);
-        context.startActivity(Intent.createChooser(intent, "Share Event"));
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_event_chooser)));
     }
 
     public static class EventViewHolder extends RecyclerView.ViewHolder {

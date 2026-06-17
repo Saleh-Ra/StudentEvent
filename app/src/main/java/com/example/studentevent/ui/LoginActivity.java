@@ -145,41 +145,56 @@ public class LoginActivity extends AppCompatActivity {
         db.collection("users").document(user.getUid())
                 .set(user)
                 .addOnSuccessListener(aVoid -> {
-                    saveUserToPrefs(user);
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(LoginActivity.this, R.string.registration_success, Toast.LENGTH_SHORT).show();
-                    navigateToMain();
+                    finishLogin(user);
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(LoginActivity.this, "Firestore error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, getString(R.string.error_firestore, e.getMessage()), Toast.LENGTH_LONG).show();
                 });
     }
 
     private void fetchUserDetailsAndSave(String uid) {
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    User user = documentSnapshot.toObject(User.class);
-                    if (user != null) {
-                        saveUserToPrefs(user);
+                    if (!documentSnapshot.exists()) {
                         progressBar.setVisibility(View.GONE);
-                        navigateToMain();
+                        Toast.makeText(LoginActivity.this, R.string.error_user_profile_missing, Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    User user = documentSnapshot.toObject(User.class);
+                    if (user == null) {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(LoginActivity.this, R.string.error_fetch_user_data, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (user.getUid() == null) {
+                        user.setUid(uid);
+                    }
+                    finishLogin(user);
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(LoginActivity.this, "Error fetching user data", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, R.string.error_fetch_user_data, Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void saveUserToPrefs(User user) {
+    private void finishLogin(User user) {
+        if (saveUserToPrefs(user)) {
+            progressBar.setVisibility(View.GONE);
+            navigateToMain();
+        }
+    }
+
+    private boolean saveUserToPrefs(User user) {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString("user_uid", user.getUid());
         editor.putString("user_name", user.getFullName());
         editor.putString("user_email", user.getEmail());
         editor.putString("user_role", user.getRole());
-        editor.apply();
+        return editor.commit();
     }
 
     private void navigateToMain() {
